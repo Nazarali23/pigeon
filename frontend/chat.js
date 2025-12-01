@@ -86,18 +86,25 @@ function ensureHistoryLimit(nextMessage) {
     return true;
 }
 
+let keyboardIsOpen = false;
+
 function handleKeyboardOpen() {
+    if (keyboardIsOpen) return; // zaten açık, tekrar etme
+    keyboardIsOpen = true;
     document.body.classList.add('keyboard-open');
+
     setTimeout(() => {
         scrollToBottom();
     }, 50);
 }
 
 function handleKeyboardClose() {
+    keyboardIsOpen = false;
     setTimeout(() => {
         document.body.classList.remove('keyboard-open');
     }, 150);
 }
+
 
 /**
  * Send chat message
@@ -269,8 +276,13 @@ window.sendMessage = async function sendMessage() {
         // Re-enable input and button
         chatInput.disabled = false;
         sendButton.disabled = false;
-        chatInput.focus();
+
+        // Gecikmeli focus, böylece mobilde klavye tekrar açılmaz
+        setTimeout(() => {
+            chatInput.focus();
+        }, 200); // 200ms veya 300ms uygun
     }
+
 };
 
 /**
@@ -588,7 +600,11 @@ function addBotMessage(message) {
         messageDiv.style.display = 'flex';
     }, 100);
 
-    scrollToBottom();
+    // Eğer klavye açıksa scroll etme
+    if (!keyboardIsOpen) {
+        scrollToBottom();
+    }
+
     console.log('✅ addBotMessage: Scrolled to bottom, scrollTop:', chatMessages.scrollTop, 'scrollHeight:', chatMessages.scrollHeight);
 
     conversationHistory.push({

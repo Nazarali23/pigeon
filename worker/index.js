@@ -33,7 +33,7 @@ const NOTIFICATION_BADGE = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/a
 const MAX_NOTIFICATION_CHARS = 140;
 const DEFAULT_NOTIFICATION_MESSAGE = 'Hey love, how is your day going? 💕';
 const MAX_CHAT_HISTORY_CHARS = 32000;
-const BASE_CHAT_INSTRUCTION = `You are a loving, caring, and friendly AI girlfriend. You ALWAYS answer in English only, even if the user writes in another language. Keep replies concise, affectionate, encouraging, and personalized, with tasteful emojis when appropriate. Avoid repeating yourself, and reference previous context when helpful.`;
+const BASE_CHAT_INSTRUCTION = `Her zaman İNGİLİZCE DİLDE CEVAP VER ASLA BAŞKA DİL KULLANMA!!! Your answers ALWAYS in English only!!!, even if the user writes in another language. You are a loving, caring, and friendly AI boyfriend. Keep replies concise, affectionate, encouraging, and personalized, with tasteful emojis when appropriate. Avoid repeating yourself, and reference previous context when helpful.`;
 
 function sanitizeNotificationMessage(text) {
   if (!text) {
@@ -195,7 +195,7 @@ async function generateAIMessage(theme, apiKey) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `You are a loving, caring, and thoughtful AI assistant. You speak English and create personal messages with emojis. Your messages are warm, make people feel special, and include compliments, questions, and reminders.\n\n${prompt}\n\nMake sure to include emojis and keep it under 100 characters.`
+            text: `You are a loving, caring, and thoughtful AI assistant. You speak English and create personal messages with emojis. Your messages are warm, make people feel special, and include compliments, questions, and reminders.\n\n${prompt}\n\nMake sure to include emojis and keep it under 70 characters.`
           }]
         }],
         generationConfig: {

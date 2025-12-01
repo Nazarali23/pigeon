@@ -8,6 +8,10 @@
     <title>Pigeon 🕊️</title>
     <link rel="manifest" href="frontend/manifest.json">
     <link rel="stylesheet" href="frontend/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script type="module" src="frontend/pigeon3d.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.0.1/model-viewer.min.js"></script>
 </head>
 
 <body>
@@ -28,11 +32,10 @@
 
     <!-- 3D Animated Pigeon in the center (GLTF model will be loaded here) -->
     <div class="pigeon-container" id="pigeon3DContainer">
-        <!-- Three.js canvas will be inserted here -->
+        <model-viewer src="frontend/pigeon.glb" alt="Animated Pigeon" auto-rotate camera-controls autoplay
+            background-color="#ffffff" class="pigeon-model">
+        </model-viewer>
     </div>
-
-    <!-- 3D Grass above chat -->
-    <div class="grass-3d-container" id="grass3DContainer"></div>
 
     <!-- Chat space at the bottom -->
     <div class="chat-container">
@@ -91,9 +94,6 @@
     </div>
 
     <!-- Scripts -->
-    <!-- Three.js for 3D graphics -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
     <!-- ÖNEMLİ: main.js önce yüklenmeli çünkü chat.js window.WORKER_URL'i kullanıyor -->
     <script src="frontend/main.js"></script>
     <script src="frontend/chat.js"></script>

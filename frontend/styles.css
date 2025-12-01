@@ -252,19 +252,29 @@ body.keyboard-open .chat-messages {
    3D ANIMATED PIGEON (GLTF Model)
    ============================================ */
 .pigeon-container {
-    position: absolute;
+    padding-top: 50px;
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 5;
     width: min(420px, 60vw);
     height: min(420px, 60vw);
-    pointer-events: none;
 }
 
 .pigeon-container canvas {
     width: 100% !important;
     height: 100% !important;
+}
+
+.pigeon-model {
+    width: 500px;
+    height: 300px;
+    margin: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
 }
 
 /* CSS Pigeon styles removed - Now using GLTF model loaded via Three.js */
@@ -709,9 +719,9 @@ body.keyboard-open .chat-messages {
         top: auto;
         left: auto;
         transform: none;
-        margin: 40px auto 0;
-        height: 260px;
+        margin: auto;
         width: 100%;
+        padding: auto;
     }
 
     .notification-content {
