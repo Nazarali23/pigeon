@@ -1,4 +1,0 @@
-name = "pigeon-pages"
-type = "javascript"
-project_name = "pigeon"
-pages_build_output_dir = "frontend" # build dizininiz
