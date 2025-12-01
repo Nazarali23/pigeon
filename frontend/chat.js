@@ -459,6 +459,91 @@ function initChat() {
         // Focus input on load
         chatInput.focus();
 
+        // Attach AR button if present
+        attachArButton();
+
+        // Toggle button initialization - MUST be inside initChat after DOM is ready
+        const toggleButton = document.getElementById('toggleChatSize');
+        const chatContainerEl = document.getElementById('chatContainer') || document.querySelector('.chat-container');
+
+        const updateTogglePosition = () => {
+            try {
+                if (!toggleButton || !chatContainerEl) return;
+                const inputContainer = chatContainerEl.querySelector('.chat-input-container');
+                if (inputContainer) {
+                    const chatHeight = chatContainerEl.offsetHeight;
+                    toggleButton.style.bottom = `${chatHeight + 8}px`;
+                }
+            } catch (e) {
+                console.warn('updateTogglePosition error:', e);
+            }
+        };
+
+        if (toggleButton && chatContainerEl) {
+            console.log('✅ Toggle button found, initializing...');
+            // Initial position
+            setTimeout(updateTogglePosition, 100);
+
+            // Get pigeon container for movement
+            const pigeonContainerEl = document.getElementById('pigeon3DContainer');
+
+            const updatePigeonPosition = () => {
+                if (!pigeonContainerEl) return;
+                try {
+                    const isMinimized = chatContainerEl.classList.contains('minimized');
+
+                    if (isMinimized) {
+                        // Chat is minimized - center pigeon in full viewport
+                        pigeonContainerEl.style.position = 'fixed';
+                        pigeonContainerEl.style.top = '50%';
+                        pigeonContainerEl.style.left = '50%';
+                        pigeonContainerEl.style.transform = 'translate(-50%, -50%)';
+                    } else {
+                        // Chat is expanded - move pigeon UP to center in available space above chat
+                        const chatRect = chatContainerEl.getBoundingClientRect();
+                        const availableHeight = chatRect.top; // distance from top of viewport to where chat starts
+                        const centerY = availableHeight / 2; // center of available space
+
+                        pigeonContainerEl.style.position = 'fixed';
+                        pigeonContainerEl.style.top = `${centerY}px`;
+                        pigeonContainerEl.style.left = '50%';
+                        pigeonContainerEl.style.transform = 'translate(-50%, -50%)';
+                    }
+                } catch (e) {
+                    console.warn('updatePigeonPosition error:', e);
+                }
+            };
+
+            // Initial pigeon position
+            updatePigeonPosition();
+
+            // Toggle click handler
+            toggleButton.addEventListener('click', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('✅ Toggle clicked');
+                chatContainerEl.classList.toggle('minimized');
+                // Update both toggle and pigeon position
+                setTimeout(() => {
+                    updateTogglePosition();
+                    updatePigeonPosition();
+                }, 50);
+            }, { passive: false });
+
+            // Update on resize / orientation - CRITICAL for small screens
+            const updateBoth = () => {
+                updateTogglePosition();
+                updatePigeonPosition();
+            };
+
+            window.addEventListener('resize', updateBoth, { passive: true });
+            window.addEventListener('orientationchange', () => {
+                setTimeout(updateBoth, 150);
+            }, { passive: true });
+        } else {
+            console.warn('⚠️ Toggle button or chat container not found');
+        }
+
         console.log('✅ Chat initialized successfully');
         console.log('Send button:', sendButton);
         console.log('Chat input:', chatInput);
@@ -866,57 +951,84 @@ if (window.visualViewport) {
  * Open model in AR (Augmented Reality)
  */
 function openModelInAR() {
+    console.log('🎬 openModelInAR() called');
     try {
         const origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
         const glbUrl = `${origin}/frontend/pigeon.glb`;
-        const usdzUrl = `${origin}/frontend/pigeon.usdz`; // iOS Quick Look asset - add this file to repo
+        const usdzUrl = `${origin}/frontend/pigeon.usdz`;
+
+        console.log('📍 Origin:', origin);
+        console.log('📍 GLB URL:', glbUrl);
+        console.log('📍 USDZ URL:', usdzUrl);
 
         // Detect iOS (iPhone/iPad) - include Mac touch devices
         const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+        const isAndroid = /Android/.test(navigator.userAgent);
+
+        console.log('📱 User Agent:', navigator.userAgent);
+        console.log('📱 Is iOS:', isIOS);
+        console.log('📱 Is Android:', isAndroid);
 
         if (isIOS) {
-            // Quick Look requires an <a rel="ar" href="...usdz"> click
+            console.log('🍎 iOS detected - attempting Quick Look AR');
             const a = document.createElement('a');
             a.setAttribute('rel', 'ar');
             a.setAttribute('href', usdzUrl);
-            // Optional: provide a child with a link for older iOS
             a.style.display = 'none';
             document.body.appendChild(a);
+            console.log('🍎 Created AR link element, clicking...');
             a.click();
-            setTimeout(() => a.remove(), 1000);
+            setTimeout(() => {
+                a.remove();
+                console.log('🍎 Removed AR link element');
+            }, 1000);
             return;
         }
 
-        // Android: try Scene Viewer via intent link
-        const sceneViewerIntent = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glbUrl)}&mode=ar_preferred#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end`;
-        window.location.href = sceneViewerIntent;
+        if (isAndroid) {
+            console.log('🤖 Android detected - attempting Scene Viewer');
+            const sceneViewerIntent = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glbUrl)}&mode=ar_preferred#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end`;
+            console.log('🤖 Scene Viewer Intent:', sceneViewerIntent);
+            window.location.href = sceneViewerIntent;
+            return;
+        }
 
-        // Fallback: try to trigger model-viewer's AR button if available
-    } catch (err) {
-        console.warn('AR open error (primary), trying fallback:', err);
-        try {
-            const mv = document.querySelector('model-viewer');
-            if (mv) {
-                // Try programmatic API if supported
-                if (typeof mv.enterAR === 'function') {
-                    mv.enterAR();
-                    return;
-                }
-                // Try to click internal AR button in shadow root
-                try {
-                    const shadow = mv.shadowRoot;
-                    const arButton = shadow && (shadow.querySelector('[slot="ar-button"]') || shadow.querySelector('button[aria-label="view in AR"]') || shadow.querySelector('button[title*="AR"]'));
+        // Desktop: try model-viewer
+        console.log('💻 Desktop detected - trying model-viewer AR');
+        const mv = document.querySelector('model-viewer');
+        if (mv) {
+            console.log('💻 model-viewer element found');
+            if (typeof mv.enterAR === 'function') {
+                console.log('💻 Calling enterAR()...');
+                mv.enterAR();
+                return;
+            }
+
+            // Try to click internal AR button
+            try {
+                const shadow = mv.shadowRoot;
+                if (shadow) {
+                    const arButton = shadow.querySelector('[slot="ar-button"]') ||
+                        shadow.querySelector('button[aria-label*="AR"]') ||
+                        shadow.querySelector('button[title*="AR"]');
                     if (arButton) {
+                        console.log('💻 Found AR button in shadow DOM, clicking...');
                         arButton.click();
                         return;
                     }
-                } catch (e2) {
-                    // ignore
                 }
+            } catch (e) {
+                console.warn('💻 Could not access shadow DOM:', e);
             }
-        } catch (finalErr) {
-            console.error('AR fallback failed:', finalErr);
         }
+
+        // Fallback: show message
+        console.warn('⚠️ No AR method available on this device/browser');
+        alert('AR is not supported on your device or browser. Please use:\n- iPhone/iPad with Safari\n- Android with Chrome\n- Supported WebXR browsers');
+
+    } catch (err) {
+        console.error('❌ AR Error:', err);
+        alert('Error opening AR: ' + err.message);
     }
 }
 
@@ -924,36 +1036,31 @@ function openModelInAR() {
 function attachArButton() {
     try {
         const arBtn = document.getElementById('viewInArButton');
-        if (!arBtn) return;
-        arBtn.addEventListener('click', (e) => {
+        if (!arBtn) {
+            console.warn('⚠️ AR button not found in DOM');
+            return;
+        }
+
+        console.log('✅ AR button found, attaching click handler');
+
+        // Ensure button is clickable
+        arBtn.style.pointerEvents = 'auto';
+        arBtn.style.cursor = 'pointer';
+
+        const handleARClick = (e) => {
+            console.log('🔘 AR button clicked');
             e.preventDefault();
             e.stopPropagation();
             openModelInAR();
-        }, { passive: false });
+        };
+
+        arBtn.addEventListener('click', handleARClick, { passive: false });
+        arBtn.addEventListener('touchend', handleARClick, { passive: false });
+
+        console.log('✅ AR button click handlers attached');
     } catch (e) {
-        console.error('attachArButton error:', e);
+        console.error('❌ attachArButton error:', e);
     }
 }
-
-const toggleButton = document.getElementById('toggleChatSize');
-const chatContainer = document.querySelector('.chat-container');
-
-function updateTogglePosition() {
-    const inputContainerHeight = chatContainer.querySelector('.chat-input-container').offsetHeight;
-    const chatHeight = chatContainer.offsetHeight;
-    // Toggle buton input'un üstüne
-    toggleButton.style.bottom = `${chatHeight}px`;
-}
-
-// Başlangıçta pozisyonu ayarla
-updateTogglePosition();
-
-toggleButton.addEventListener('click', () => {
-    chatContainer.classList.toggle('minimized');
-    updateTogglePosition();
-});
-
-// Ekran boyutu değişirse toggle pozisyonunu güncelle
-window.addEventListener('resize', updateTogglePosition);
 
 

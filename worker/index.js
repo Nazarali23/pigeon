@@ -176,9 +176,9 @@ async function generateAIMessage(theme, apiKey) {
 
     // Theme-based prompts in English with emojis
     const prompts = {
-      morning: "Create a warm, loving morning message in English. Make it personal and caring. Include emojis. Examples: 'How's your day going?', 'I miss you', 'Don't forget to drink water', 'You look beautiful today'. Keep it short, sweet, and make the person feel special, each message should be different.",
-      afternoon: "Create a caring afternoon check-in message in English. Ask how their day is going. Include emojis. Make it warm and personal. Examples: 'How's your day going?', 'I miss you', 'Take a break', 'You're doing great'. Keep it short and make them feel special, each message should be different.",
-      evening: "Create a relaxing evening message in English. Ask how their day was and suggest relaxation. Include emojis. Make it warm and personal. Examples: 'How was your day?', 'I missed you', 'Time to relax', 'You're amazing'. Keep it short and make them feel special, each message should be different."
+      morning: "Create a warm, loving morning message in English. Make it personal and caring. Include emojis. Examples: 'How's your day going?', 'I miss you', 'Don't forget to drink water', 'You look beautiful today'. Keep it short, sweet, and make the person feel special, each message should be different. Just give the message. No explanations or extra details.",
+      afternoon: "Create a caring afternoon check-in message in English. Ask how their day is going. Include emojis. Make it warm and personal. Examples: 'How's your day going?', 'I miss you', 'Take a break', 'You're doing great'. Keep it short and make them feel special, each message should be different. Just give the message. No explanations or extra details.",
+      evening: "Create a relaxing evening message in English. Ask how their day was and suggest relaxation. Include emojis. Make it warm and personal. Examples: 'How was your day?', 'I missed you', 'Time to relax', 'You're amazing'. Keep it short and make them feel special, each message should be different. Just give the message. No explanations or extra details."
     };
 
     const prompt = prompts[theme] || prompts.morning;
