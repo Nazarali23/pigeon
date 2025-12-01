@@ -328,6 +328,59 @@ function initChat() {
         // Check URL for notification message
         checkNotificationMessage();
 
+        // Prevent focus events on sky and pigeon areas so chat doesn't resize/lag
+        const sky = document.querySelector('.sky');
+        const pigeonContainer = document.getElementById('pigeon3DContainer');
+        const notificationMessage = document.getElementById('notificationMessage');
+
+        const preventFocusEvent = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        };
+
+        // Attach to sky and clouds
+        if (sky) {
+            sky.addEventListener('touchstart', preventFocusEvent, { passive: false });
+            sky.addEventListener('mousedown', preventFocusEvent, { passive: false });
+            sky.addEventListener('click', preventFocusEvent, { passive: false });
+        }
+
+        // Attach to pigeon container
+        if (pigeonContainer) {
+            pigeonContainer.addEventListener('touchstart', preventFocusEvent, { passive: false });
+            pigeonContainer.addEventListener('mousedown', preventFocusEvent, { passive: false });
+            pigeonContainer.addEventListener('click', preventFocusEvent, { passive: false });
+        }
+
+        // Attach to notification message
+        if (notificationMessage) {
+            notificationMessage.addEventListener('touchstart', preventFocusEvent, { passive: false });
+            notificationMessage.addEventListener('mousedown', preventFocusEvent, { passive: false });
+            notificationMessage.addEventListener('click', preventFocusEvent, { passive: false });
+        }
+
+        // Prevent focus events on chat container and messages area (except input)
+        const chatContainer = document.querySelector('.chat-container');
+        const chatMessagesElement = document.getElementById('chatMessages');
+        const chatInputContainer = document.querySelector('.chat-input-container');
+
+        if (chatMessagesElement) {
+            chatMessagesElement.addEventListener('touchstart', preventFocusEvent, { passive: false });
+            chatMessagesElement.addEventListener('mousedown', preventFocusEvent, { passive: false });
+            chatMessagesElement.addEventListener('click', preventFocusEvent, { passive: false });
+        }
+
+        if (chatInputContainer) {
+            // Allow input to function normally, but prevent other clicks in container from triggering keyboard
+            chatInputContainer.addEventListener('click', (e) => {
+                // Let the input or send button handle their own clicks
+                if (e.target !== chatInput && e.target !== sendButton && !sendButton.contains(e.target)) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+            }, { passive: false });
+        }
+
         // Send message on button click - Multiple event handlers for reliability
         console.log('🔍 Adding click event listener to sendButton');
         console.log('🔍 sendMessage function available:', typeof window.sendMessage);
@@ -808,3 +861,99 @@ if (window.visualViewport) {
         }
     });
 }
+
+/**
+ * Open model in AR (Augmented Reality)
+ */
+function openModelInAR() {
+    try {
+        const origin = window.location.origin || (window.location.protocol + '//' + window.location.host);
+        const glbUrl = `${origin}/frontend/pigeon.glb`;
+        const usdzUrl = `${origin}/frontend/pigeon.usdz`; // iOS Quick Look asset - add this file to repo
+
+        // Detect iOS (iPhone/iPad) - include Mac touch devices
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+
+        if (isIOS) {
+            // Quick Look requires an <a rel="ar" href="...usdz"> click
+            const a = document.createElement('a');
+            a.setAttribute('rel', 'ar');
+            a.setAttribute('href', usdzUrl);
+            // Optional: provide a child with a link for older iOS
+            a.style.display = 'none';
+            document.body.appendChild(a);
+            a.click();
+            setTimeout(() => a.remove(), 1000);
+            return;
+        }
+
+        // Android: try Scene Viewer via intent link
+        const sceneViewerIntent = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(glbUrl)}&mode=ar_preferred#Intent;scheme=https;package=com.google.android.googlequicksearchbox;action=android.intent.action.VIEW;end`;
+        window.location.href = sceneViewerIntent;
+
+        // Fallback: try to trigger model-viewer's AR button if available
+    } catch (err) {
+        console.warn('AR open error (primary), trying fallback:', err);
+        try {
+            const mv = document.querySelector('model-viewer');
+            if (mv) {
+                // Try programmatic API if supported
+                if (typeof mv.enterAR === 'function') {
+                    mv.enterAR();
+                    return;
+                }
+                // Try to click internal AR button in shadow root
+                try {
+                    const shadow = mv.shadowRoot;
+                    const arButton = shadow && (shadow.querySelector('[slot="ar-button"]') || shadow.querySelector('button[aria-label="view in AR"]') || shadow.querySelector('button[title*="AR"]'));
+                    if (arButton) {
+                        arButton.click();
+                        return;
+                    }
+                } catch (e2) {
+                    // ignore
+                }
+            }
+        } catch (finalErr) {
+            console.error('AR fallback failed:', finalErr);
+        }
+    }
+}
+
+// Attach AR button handler during initChat (non-invasive)
+function attachArButton() {
+    try {
+        const arBtn = document.getElementById('viewInArButton');
+        if (!arBtn) return;
+        arBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openModelInAR();
+        }, { passive: false });
+    } catch (e) {
+        console.error('attachArButton error:', e);
+    }
+}
+
+const toggleButton = document.getElementById('toggleChatSize');
+const chatContainer = document.querySelector('.chat-container');
+
+function updateTogglePosition() {
+    const inputContainerHeight = chatContainer.querySelector('.chat-input-container').offsetHeight;
+    const chatHeight = chatContainer.offsetHeight;
+    // Toggle buton input'un üstüne
+    toggleButton.style.bottom = `${chatHeight}px`;
+}
+
+// Başlangıçta pozisyonu ayarla
+updateTogglePosition();
+
+toggleButton.addEventListener('click', () => {
+    chatContainer.classList.toggle('minimized');
+    updateTogglePosition();
+});
+
+// Ekran boyutu değişirse toggle pozisyonunu güncelle
+window.addEventListener('resize', updateTogglePosition);
+
+

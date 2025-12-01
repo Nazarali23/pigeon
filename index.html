@@ -32,13 +32,21 @@
 
     <!-- 3D Animated Pigeon in the center (GLTF model will be loaded here) -->
     <div class="pigeon-container" id="pigeon3DContainer">
-        <model-viewer src="frontend/pigeon.glb" alt="Animated Pigeon" auto-rotate camera-controls autoplay
-            background-color="#ffffff" class="pigeon-model">
+        <!-- Enable AR modes; ios-src points to a .usdz for iOS Quick Look (place frontend/pigeon.usdz in your repo) -->
+        <model-viewer src="frontend/pigeon.glb" ios-src="frontend/pigeon.usdz" alt="Animated Pigeon" auto-rotate
+            camera-controls autoplay ar ar-modes="webxr scene-viewer quick-look" environment-image="neutral"
+            class="pigeon-model">
         </model-viewer>
+
+        <!-- View in AR button overlay -->
+        <button id="viewInArButton" class="ar-button" type="button" aria-label="View in AR">
+            📱 View in AR
+        </button>
     </div>
 
+    <button id="toggleChatSize" class="toggle-button">📏</button>
     <!-- Chat space at the bottom -->
-    <div class="chat-container">
+    <div class="chat-container minimized" id="chatContainer">
         <div class="chat-header">
             <h2>💬 Chat with Pigeon</h2>
             <div class="chat-header-buttons">

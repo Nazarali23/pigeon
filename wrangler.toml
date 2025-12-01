@@ -14,6 +14,7 @@ workers_dev = true
 # Preview URLs (geliştirme için preview URL'ler)
 preview_urls = true
 
+
 # KV Namespace Binding
 # KV namespace'i önce Cloudflare Dashboard'dan oluşturmalısınız
 # Sonra ID'sini buraya yazın
@@ -41,4 +42,3 @@ crons = ["30 5 * * *", "* * * * *"]
 # [env.production.kv_namespaces]
 # binding = "subs"
 # id = "production-kv-namespace-id"
-
