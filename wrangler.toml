@@ -1,0 +1,40 @@
+# Cloudflare Worker Configuration
+# Bu dosya worker'ı deploy etmek için gereklidir
+
+name = "pigeon-worker"
+main = "worker/index.js"
+compatibility_date = "2024-01-01"
+
+# Workers.dev deployment (workers.dev subdomain'inde deploy edilir)
+workers_dev = true
+
+# Preview URLs (geliştirme için preview URL'ler)
+preview_urls = true
+
+# KV Namespace Binding
+# KV namespace'i önce Cloudflare Dashboard'dan oluşturmalısınız
+# Sonra ID'sini buraya yazın
+# NOT: binding adı "subs" olmalı, worker/index.js'de env.subs kullanılıyor
+[[kv_namespaces]]
+binding = "subs"
+id = "dc9aa65718da4903be30f00073292e8f"
+
+# Cron Triggers
+# "0 9 * * *" - Her gün saat 09:00 UTC'de günün zamanını planlar
+# "* * * * *" - Her dakika kontrol eder, zaman geldiyse bildirim gönderir
+[triggers]
+crons = ["0 9 * * *", "* * * * *"]
+
+# Environment Variables (Secret olarak set edilmeli)
+# Bu değerler wrangler secret put komutu ile veya Dashboard'dan ayarlanmalı
+# Örnek:
+# wrangler secret put AI_API_KEY
+# wrangler secret put SITE_URL
+# wrangler secret put VAPID_PUBLIC_KEY
+# wrangler secret put VAPID_PRIVATE_KEY
+
+# Production environment için (opsiyonel)
+# [env.production]
+# [env.production.kv_namespaces]
+# binding = "subs"
+# id = "production-kv-namespace-id"
