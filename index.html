@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="tr">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -21,44 +21,34 @@
         <div class="notification-message" id="notificationMessage">
             <div class="notification-content">
                 <span class="notification-icon">💌</span>
-                <span class="notification-text" id="notificationText">Bugün güzel bir gün olacak!</span>
+                <span class="notification-text" id="notificationText">Today will be a beautiful day!</span>
             </div>
         </div>
     </div>
 
-    <!-- 3D Animated Pigeon in the center -->
-    <div class="pigeon-container">
-        <div class="pigeon">
-            <!-- Pigeon body -->
-            <div class="pigeon-body">
-                <div class="pigeon-head">
-                    <div class="pigeon-eye left-eye"></div>
-                    <div class="pigeon-eye right-eye"></div>
-                    <div class="pigeon-beak"></div>
-                </div>
-                <div class="pigeon-wing left-wing"></div>
-                <div class="pigeon-wing right-wing"></div>
-                <div class="pigeon-tail"></div>
-            </div>
-        </div>
+    <!-- 3D Animated Pigeon in the center (GLTF model will be loaded here) -->
+    <div class="pigeon-container" id="pigeon3DContainer">
+        <!-- Three.js canvas will be inserted here -->
     </div>
 
-    <!-- Grass at the bottom -->
-    <div class="grass-container">
-        <div class="grass grass1"></div>
-        <div class="grass grass2"></div>
-        <div class="grass grass3"></div>
-        <div class="grass grass4"></div>
-        <div class="grass grass5"></div>
-    </div>
+    <!-- 3D Grass above chat -->
+    <div class="grass-3d-container" id="grass3DContainer"></div>
 
     <!-- Chat space at the bottom -->
     <div class="chat-container">
         <div class="chat-header">
             <h2>💬 Chat with Pigeon</h2>
-            <div class="chat-status" id="chatStatus">
-                <span class="status-dot"></span>
-                <span>Online</span>
+            <div class="chat-header-buttons">
+                <button id="createMessageButton" class="create-message-button" title="Create a random message">
+                    ✨ Create Message
+                </button>
+                <button id="enableNotificationsButton" class="notify-button" title="Enable push notifications">
+                    🔔 Enable Notifications
+                </button>
+                <div class="chat-status" id="chatStatus">
+                    <span class="status-dot"></span>
+                    <span id="chatStatusText">Online</span>
+                </div>
             </div>
         </div>
 
@@ -66,14 +56,14 @@
             <div class="message bot-message">
                 <div class="message-avatar">🕊️</div>
                 <div class="message-content">
-                    <p>Merhaba! Bugün nasılsın? Nasıl yardımcı olabilirim?</p>
+                    <p>Hello! How are you today? How can I help you?</p>
                     <span class="message-time" id="botMessageTime"></span>
                 </div>
             </div>
         </div>
 
         <div class="chat-input-container">
-            <input type="text" id="chatInput" class="chat-input" placeholder="Mesajınızı yazın..." autocomplete="off">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message..." autocomplete="off">
             <button id="sendButton" class="send-button" type="button">
                 <span>✈️</span>
             </button>
@@ -83,7 +73,7 @@
     <!-- Loading overlay -->
     <div class="loading-overlay" id="loadingOverlay">
         <div class="loading-spinner"></div>
-        <p>Pigeon hazırlanıyor...</p>
+        <p>Pigeon is preparing...</p>
     </div>
 
     <!-- Protocol warning (for file://) -->
@@ -101,9 +91,14 @@
     </div>
 
     <!-- Scripts -->
+    <!-- Three.js for 3D graphics -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
     <!-- ÖNEMLİ: main.js önce yüklenmeli çünkü chat.js window.WORKER_URL'i kullanıyor -->
     <script src="frontend/main.js"></script>
     <script src="frontend/chat.js"></script>
+    <script src="frontend/pigeon3d.js"></script>
+    <script src="frontend/grass3d.js"></script>
     <!-- Fallback: Eğer chat.js yüklenmezse loading overlay'i kapat -->
     <script>
         // Güvenlik: Her durumda loading overlay'i kapat

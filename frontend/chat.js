@@ -310,6 +310,14 @@ function initChat() {
             }
         });
 
+        // Create Message button
+        const createMessageButton = document.getElementById('createMessageButton');
+        if (createMessageButton) {
+            createMessageButton.addEventListener('click', () => {
+                createRandomMessage();
+            });
+        }
+
         // Focus input on load
         chatInput.focus();
 
@@ -375,12 +383,64 @@ async function loadTodaysNotification() {
         // Try to get today's message from Worker
         // This would require an endpoint to get today's scheduled message
         // For now, use a default message
-        const defaultMessage = "Bugün güzel bir gün olacak! 🌟";
+        const defaultMessage = "Today will be a beautiful day! 🌟";
         displayNotificationMessage(defaultMessage);
     } catch (error) {
         console.error('Error loading notification:', error);
     }
 }
+
+/**
+ * Create a random message instantly
+ */
+async function createRandomMessage() {
+    const button = document.getElementById('createMessageButton');
+    if (button) {
+        button.disabled = true;
+        button.textContent = '✨ Creating...';
+    }
+
+    try {
+        const workerUrl = getWorkerUrl();
+        if (!workerUrl) {
+            addBotMessage("⚠️ Worker URL not configured. Please check your setup.");
+            return;
+        }
+
+        const response = await fetch(`${workerUrl}/generate-message`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({})
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            const message = data.message || "Hello! How are you today? 💕";
+
+            // Display in notification area
+            displayNotificationMessage(message);
+
+            // Add to chat
+            addBotMessage(message);
+        } else {
+            const errorData = await response.json().catch(() => ({}));
+            addBotMessage(errorData.message || "Could not generate message. Please try again.");
+        }
+    } catch (error) {
+        console.error('Error creating message:', error);
+        addBotMessage("Error creating message. Please try again.");
+    } finally {
+        if (button) {
+            button.disabled = false;
+            button.textContent = '✨ Create Message';
+        }
+    }
+}
+
+// Make createRandomMessage globally available
+window.createRandomMessage = createRandomMessage;
 
 
 /**
@@ -514,7 +574,7 @@ function scrollToBottom() {
  */
 function getCurrentTime() {
     const now = new Date();
-    return now.toLocaleTimeString('tr-TR', {
+    return now.toLocaleTimeString('en-US', {
         hour: '2-digit',
         minute: '2-digit'
     });

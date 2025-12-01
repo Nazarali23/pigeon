@@ -44,11 +44,11 @@ self.addEventListener('push', (event) => {
   console.log('Push event received:', event);
   
   // Push data'sını parse et
-  let notificationData = {
-    title: 'Merhaba ❤️',
-    body: 'Yeni bir mesajınız var!',
-    icon: 'icon-192x192.png',
-    badge: 'badge-72x72.png',
+let notificationData = {
+    title: 'Hello ❤️',
+    body: 'You have a new message!',
+    icon: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f497.png',
+    badge: 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f49c.png',
     data: {
       url: '/'
     }

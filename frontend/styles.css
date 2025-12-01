@@ -25,11 +25,14 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    height: 100vh;
-    width: 100vw;
-    overflow: hidden;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     position: relative;
     background: linear-gradient(to bottom, var(--sky-blue-start) 0%, var(--sky-blue-end) 70%, var(--grass-green) 70%);
+    padding-bottom: 200px;
 }
 
 /* ============================================
@@ -228,7 +231,7 @@ body {
 }
 
 /* ============================================
-   3D ANIMATED PIGEON
+   3D ANIMATED PIGEON (GLTF Model)
    ============================================ */
 .pigeon-container {
     position: absolute;
@@ -236,186 +239,20 @@ body {
     left: 50%;
     transform: translate(-50%, -50%);
     z-index: 5;
-    perspective: 1000px;
+    width: min(420px, 60vw);
+    height: min(420px, 60vw);
+    pointer-events: none;
 }
 
-.pigeon {
-    width: 200px;
-    height: 200px;
-    position: relative;
-    transform-style: preserve-3d;
-    animation: pigeonFloat 4s ease-in-out infinite, pigeonRotate 8s linear infinite;
+.pigeon-container canvas {
+    width: 100% !important;
+    height: 100% !important;
 }
 
-@keyframes pigeonFloat {
-
-    0%,
-    100% {
-        transform: translateY(0) rotateY(0deg);
-    }
-
-    50% {
-        transform: translateY(-20px) rotateY(5deg);
-    }
-}
-
-@keyframes pigeonRotate {
-    0% {
-        transform: rotateY(0deg);
-    }
-
-    100% {
-        transform: rotateY(360deg);
-    }
-}
-
-/* Pigeon body */
-.pigeon-body {
-    width: 120px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--pigeon-light) 0%, var(--pigeon-gray) 100%);
-    border-radius: 50% 50% 40% 40%;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-}
-
-/* Pigeon head */
-.pigeon-head {
-    width: 50px;
-    height: 50px;
-    background: linear-gradient(135deg, var(--pigeon-light) 0%, var(--pigeon-gray) 100%);
-    border-radius: 50%;
-    position: absolute;
-    top: -25px;
-    left: 50%;
-    transform: translateX(-50%);
-    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.15);
-}
-
-/* Pigeon eyes */
-.pigeon-eye {
-    width: 8px;
-    height: 8px;
-    background: #000;
-    border-radius: 50%;
-    position: absolute;
-    top: 15px;
-    animation: blink 3s infinite;
-}
-
-.pigeon-eye.left-eye {
-    left: 12px;
-}
-
-.pigeon-eye.right-eye {
-    right: 12px;
-}
-
-@keyframes blink {
-
-    0%,
-    90%,
-    100% {
-        height: 8px;
-    }
-
-    95% {
-        height: 2px;
-    }
-}
-
-/* Pigeon beak */
-.pigeon-beak {
-    width: 12px;
-    height: 8px;
-    background: #FFA726;
-    border-radius: 0 0 50% 50%;
-    position: absolute;
-    bottom: -5px;
-    left: 50%;
-    transform: translateX(-50%);
-}
-
-/* Pigeon wings */
-.pigeon-wing {
-    width: 60px;
-    height: 80px;
-    background: linear-gradient(135deg, var(--pigeon-light) 0%, var(--pigeon-gray) 100%);
-    border-radius: 50% 20% 20% 50%;
-    position: absolute;
-    top: 10px;
-    transform-origin: top center;
-    animation: wingFlap 1s ease-in-out infinite;
-}
-
-.pigeon-wing.left-wing {
-    left: -30px;
-    transform: rotate(-20deg);
-}
-
-.pigeon-wing.right-wing {
-    right: -30px;
-    transform: rotate(20deg) scaleX(-1);
-}
-
-@keyframes wingFlap {
-
-    0%,
-    100% {
-        transform: rotateY(-20deg) rotateZ(0deg);
-    }
-
-    50% {
-        transform: rotateY(-20deg) rotateZ(-15deg);
-    }
-}
-
-.pigeon-wing.right-wing {
-    animation-name: wingFlapRight;
-}
-
-@keyframes wingFlapRight {
-
-    0%,
-    100% {
-        transform: rotateY(20deg) rotateZ(0deg) scaleX(-1);
-    }
-
-    50% {
-        transform: rotateY(20deg) rotateZ(15deg) scaleX(-1);
-    }
-}
-
-/* Pigeon tail */
-.pigeon-tail {
-    width: 40px;
-    height: 30px;
-    background: linear-gradient(135deg, var(--pigeon-gray) 0%, #757575 100%);
-    border-radius: 0 50% 50% 0;
-    position: absolute;
-    bottom: 20px;
-    right: -20px;
-    transform: rotate(-10deg);
-    animation: tailWag 2s ease-in-out infinite;
-}
-
-@keyframes tailWag {
-
-    0%,
-    100% {
-        transform: rotate(-10deg);
-    }
-
-    50% {
-        transform: rotate(10deg);
-    }
-}
+/* CSS Pigeon styles removed - Now using GLTF model loaded via Three.js */
 
 /* ============================================
-   GRASS
+   GRASS (2D CSS - kept for fallback)
    ============================================ */
 .grass-container {
     position: absolute;
@@ -430,68 +267,24 @@ body {
     overflow: hidden;
 }
 
-.grass {
-    position: absolute;
-    bottom: 0;
-    width: 4px;
-    background: var(--grass-dark);
-    border-radius: 2px 2px 0 0;
-    animation: grassSway 3s ease-in-out infinite;
+/* ============================================
+   3D GRASS ABOVE CHAT
+   ============================================ */
+.grass-3d-container {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    margin: -120px auto 0;
+    z-index: 50;
+    pointer-events: none;
+    overflow: hidden;
 }
 
-.grass1 {
-    height: 40px;
-    left: 5%;
-    animation-delay: 0s;
+.grass-3d-container canvas {
+    width: 100% !important;
+    height: 100% !important;
 }
 
-.grass2 {
-    height: 60px;
-    left: 15%;
-    animation-delay: 0.2s;
-}
-
-.grass3 {
-    height: 50px;
-    left: 30%;
-    animation-delay: 0.4s;
-}
-
-.grass4 {
-    height: 55px;
-    left: 70%;
-    animation-delay: 0.6s;
-}
-
-.grass5 {
-    height: 45px;
-    left: 85%;
-    animation-delay: 0.8s;
-}
-
-.grass:before {
-    content: '';
-    position: absolute;
-    top: -20px;
-    left: -2px;
-    width: 8px;
-    height: 30px;
-    background: var(--grass-green);
-    border-radius: 4px 4px 0 0;
-    transform: rotate(-5deg);
-}
-
-.grass:after {
-    content: '';
-    position: absolute;
-    top: -25px;
-    right: -2px;
-    width: 8px;
-    height: 35px;
-    background: var(--grass-green);
-    border-radius: 4px 4px 0 0;
-    transform: rotate(5deg);
-}
 
 @keyframes grassSway {
 
@@ -509,11 +302,10 @@ body {
    CHAT CONTAINER
    ============================================ */
 .chat-container {
-    position: absolute;
-    bottom: 0;
-    left: 0;
+    position: relative;
     width: 100%;
-    max-height: 40%;
+    max-width: 960px;
+    margin: 0 auto;
     background: var(--chat-bg);
     backdrop-filter: blur(10px);
     border-top: 2px solid var(--chat-border);
@@ -522,6 +314,7 @@ body {
     display: flex;
     flex-direction: column;
     animation: slideUp 0.5s ease-out;
+    border-radius: 24px 24px 0 0;
 }
 
 @keyframes slideUp {
@@ -541,6 +334,66 @@ body {
     justify-content: space-between;
     align-items: center;
     background: rgba(255, 255, 255, 0.8);
+}
+
+.chat-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.create-message-button {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #FF6B9D, #C44569);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3);
+    white-space: nowrap;
+}
+
+.create-message-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 107, 157, 0.4);
+}
+
+.create-message-button:active {
+    transform: scale(0.95);
+}
+
+.create-message-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.notify-button {
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #56ab2f, #a8e063);
+    color: white;
+    border: none;
+    border-radius: 20px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(86, 171, 47, 0.3);
+    white-space: nowrap;
+}
+
+.notify-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(86, 171, 47, 0.4);
+}
+
+.notify-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
 }
 
 .chat-header h2 {
@@ -572,8 +425,8 @@ body {
     display: flex;
     flex-direction: column;
     gap: 15px;
-    min-height: 200px;
-    max-height: 300px;
+    min-height: 240px;
+    max-height: min(420px, 45vh);
 }
 
 .message {
@@ -821,9 +674,18 @@ body {
    RESPONSIVE DESIGN
    ============================================ */
 @media (max-width: 768px) {
-    .pigeon {
-        width: 150px;
-        height: 150px;
+    body {
+        padding-bottom: 120px;
+    }
+
+    .pigeon-container {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        margin: 40px auto 0;
+        height: 260px;
+        width: 100%;
     }
 
     .notification-content {
@@ -835,16 +697,51 @@ body {
         font-size: 16px;
     }
 
+    .grass-3d-container {
+        margin-top: -60px;
+        height: 110px;
+    }
+
     .chat-container {
-        max-height: 50%;
+        max-height: none;
+        min-height: 60vh;
+        border-radius: 24px 24px 0 0;
     }
 
     .chat-messages {
-        max-height: 250px;
+        max-height: none;
+        min-height: 40vh;
     }
 
     .message-content {
-        max-width: 85%;
+        max-width: 90%;
+    }
+
+    .chat-header-buttons {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .create-message-button,
+    .notify-button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (min-width: 1024px) {
+    .chat-container {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        max-height: 45%;
+        border-radius: 32px 32px 0 0;
+    }
+
+    .grass-3d-container {
+        height: 160px;
+        margin-top: -180px;
     }
 }
 

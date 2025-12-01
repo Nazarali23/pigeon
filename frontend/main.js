@@ -331,11 +331,91 @@ function checkProtocol() {
 }
 
 // Otomatik olarak başlatmak için
+function isPushSupported() {
+  return typeof window !== 'undefined' &&
+    'Notification' in window &&
+    'serviceWorker' in navigator &&
+    'PushManager' in window;
+}
+
+function updateChatStatusText(text) {
+  const statusText = document.getElementById('chatStatusText');
+  if (statusText && text) {
+    statusText.textContent = text;
+  }
+}
+
+function setupNotificationButton(isSecureProtocol) {
+  const button = document.getElementById('enableNotificationsButton');
+
+  if (!button) {
+    return;
+  }
+
+  if (!isSecureProtocol) {
+    button.disabled = true;
+    button.textContent = 'HTTPS required';
+    updateChatStatusText('HTTPS required for push');
+    return;
+  }
+
+  if (!isPushSupported()) {
+    button.disabled = true;
+    button.textContent = 'Push not supported';
+    updateChatStatusText('Push not supported');
+    return;
+  }
+
+  const permission = Notification.permission;
+  if (permission === 'granted') {
+    button.disabled = true;
+    button.textContent = '🔔 Enabled';
+    updateChatStatusText('Notifications on');
+    initializePushNotifications();
+    return;
+  }
+
+  if (permission === 'denied') {
+    button.disabled = true;
+    button.textContent = 'Permission blocked';
+    updateChatStatusText('Allow push in browser settings');
+    return;
+  }
+
+  updateChatStatusText('Tap to enable notifications');
+
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    button.textContent = '🔔 Enabling...';
+    updateChatStatusText('Waiting for permission...');
+
+    try {
+      const result = await initializePushNotifications();
+
+      if (result.success) {
+        button.textContent = '🔔 Enabled';
+        button.disabled = true;
+        updateChatStatusText('Notifications on');
+      } else if (result.skipped) {
+        button.disabled = false;
+        button.textContent = '🔔 Enable Notifications';
+        updateChatStatusText('Push available when HTTPS is enabled');
+      } else {
+        throw new Error(result.error || 'Permission was not granted');
+      }
+    } catch (error) {
+      console.error('Enable notification error:', error);
+      button.disabled = false;
+      button.textContent = '🔔 Enable Notifications';
+      updateChatStatusText('Permission required for push');
+      alert('Please allow notifications to receive daily messages.');
+    }
+  });
+}
+
 window.addEventListener('load', () => {
-  // Önce protocol kontrolü yap
   const isSecureProtocol = checkProtocol();
 
-  // Loading overlay'i kapat (chat.js ile çift kapanmayı önlemek için)
   setTimeout(() => {
     const overlay = document.getElementById('loadingOverlay');
     if (overlay && overlay.style.display !== 'none') {
@@ -346,15 +426,5 @@ window.addEventListener('load', () => {
     }
   }, 500);
 
-  // Push notifications'ı başlat (hata olsa bile devam et)
-  if (isSecureProtocol) {
-    initializePushNotifications().then(result => {
-      console.log('Push notifications initialized:', result);
-    }).catch(error => {
-      console.error('Push notification initialization error:', error);
-      // Hata olsa bile uygulama çalışmaya devam etsin
-    });
-  } else {
-    console.warn('Running in file:// protocol. Service Worker features disabled.');
-  }
+  setupNotificationButton(isSecureProtocol);
 });

@@ -20,10 +20,10 @@ binding = "subs"
 id = "dc9aa65718da4903be30f00073292e8f"
 
 # Cron Triggers
-# "0 9 * * *" - Her gün saat 09:00 UTC'de günün zamanını planlar
+# "30 5 * * *" - Her gün saat 05:30 UTC (08:30 Turkey time) günün zamanını planlar
 # "* * * * *" - Her dakika kontrol eder, zaman geldiyse bildirim gönderir
 [triggers]
-crons = ["0 9 * * *", "* * * * *"]
+crons = ["30 5 * * *", "* * * * *"]
 
 # Environment Variables (Secret olarak set edilmeli)
 # Bu değerler wrangler secret put komutu ile veya Dashboard'dan ayarlanmalı

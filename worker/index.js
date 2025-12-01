@@ -1,40 +1,35 @@
-/**
- * Cloudflare Worker - Web Push Notification System
- * 
- * Endpoints:
- * - POST /subscribe - Kayıt subscription'ı KV'ye kaydeder
- * - POST /unsubscribe - Subscription'ı KV'den siler
- * - POST /send-test - Test bildirimi gönderir
- * - POST /generate-message - AI ile mesaj üretir
- * curl "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent" \
- * Cron Jobs:
- * - "0 9 * * *" - Her gün saat 09:00'da rastgele zaman seçer
- * - "* * * * *" - Her dakika kontrol eder, zaman geldiyse bildirim gönderir
- */
 
 
-// Time ranges for notifications (UTC - Türkiye için +3 ekleyin)
+// Time ranges for notifications (UTC - Turkey is UTC+3)
+// User wants: 9-11, 14:00-18:00, 21:00-23:00 (Turkey time)
+// UTC equivalent: 6-8, 11-15, 18-20
 const TIME_RANGES = {
-  morning: { start: 7, end: 9 },    // UTC 07:00-09:59 = TR 10:00-12:59
-  afternoon: { start: 11, end: 14 }, // UTC 11:00-14:59 = TR 14:00-17:59
+  morning: { start: 6, end: 8 },     // UTC 06:00-08:59 = TR 09:00-11:59
+  afternoon: { start: 11, end: 15 }, // UTC 11:00-15:59 = TR 14:00-18:59
   evening: { start: 18, end: 20 }    // UTC 18:00-20:59 = TR 21:00-23:59
 };
 
-// Theme messages
+// Fallback theme messages (English with emojis)
 const THEME_MESSAGES = {
   morning: [
-    "Günaydın tatlım, bugün nasıl hissediyorsun?",
-    "Bugün güzel bir gün olacak mı birlikte görelim mi?"
+    "Good morning! How's your day going? ☀️",
+    "Hope you're having a beautiful morning! 🌸",
+    "Don't forget to drink water! 💧"
   ],
   afternoon: [
-    "Umarım günün güzel geçiyordur, biraz mola vermeye ne dersin?",
-    "Şu ana kadar günün nasıl geçti?"
+    "How's your day going? I miss you! 💕",
+    "You look beautiful today! ✨",
+    "Take a break, you deserve it! 🌿"
   ],
   evening: [
-    "Bugün nasıldı tatlım?",
-    "Rahatlamak için güzel bir akşam, günün nasıl geçti?"
+    "How was your day? I missed you! 🌙",
+    "You're doing great today! Keep it up! 💪",
+    "Time to relax and unwind! 🌟"
   ]
 };
+
+const NOTIFICATION_ICON = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f497.png';
+const NOTIFICATION_BADGE = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f49c.png';
 
 /**
  * Web Push encryption için gerekli utility fonksiyonlar
@@ -128,11 +123,11 @@ async function generateAIMessage(theme, apiKey) {
       throw new Error('API key not provided');
     }
 
-    // Theme'e göre prompt oluştur
+    // Theme-based prompts in English with emojis
     const prompts = {
-      morning: "Türkçe olarak sıcak, sevgi dolu bir sabah mesajı oluştur. Kişisel ve özenli olsun. Kısa ve samimi olsun.",
-      afternoon: "Türkçe olarak öğlen kontrol mesajı oluştur. Günün nasıl geçtiğini sor. Sıcak ve ilgili olsun.",
-      evening: "Türkçe olarak rahatlatıcı bir akşam mesajı oluştur. Günün nasıl geçtiğini sor ve rahatlamayı öner. Samimi olsun."
+      morning: "Create a warm, loving morning message in English. Make it personal and caring. Include emojis. Examples: 'How's your day going?', 'I miss you', 'Don't forget to drink water', 'You look beautiful today'. Keep it short, sweet, and make the person feel special.",
+      afternoon: "Create a caring afternoon check-in message in English. Ask how their day is going. Include emojis. Make it warm and personal. Examples: 'How's your day going?', 'I miss you', 'Take a break', 'You're doing great'. Keep it short and make them feel special.",
+      evening: "Create a relaxing evening message in English. Ask how their day was and suggest relaxation. Include emojis. Make it warm and personal. Examples: 'How was your day?', 'I missed you', 'Time to relax', 'You're amazing'. Keep it short and make them feel special."
     };
 
     const prompt = prompts[theme] || prompts.morning;
@@ -149,11 +144,11 @@ async function generateAIMessage(theme, apiKey) {
       body: JSON.stringify({
         contents: [{
           parts: [{
-            text: `Sen sevgi dolu, samimi ve özenli bir AI asistanısın. Türkçe konuşuyorsun ve kişisel mesajlar oluşturuyorsun.\n\n${prompt}`
+            text: `You are a loving, caring, and thoughtful AI assistant. You speak English and create personal messages with emojis. Your messages are warm, make people feel special, and include compliments, questions, and reminders.\n\n${prompt}\n\nMake sure to include emojis and keep it under 100 characters.`
           }]
         }],
         generationConfig: {
-          temperature: 0.8,
+          temperature: 0.9,
           maxOutputTokens: 150,
           topP: 0.95,
           topK: 40
@@ -280,10 +275,10 @@ async function sendPushNotification(subscription, message, siteUrl, vapidPrivate
 
     // Payload oluştur
     const payload = JSON.stringify({
-      title: 'Merhaba ❤️',
+      title: 'Hello ❤️',
       body: message,
-      icon: '/icon-192x192.png',
-      badge: '/badge-72x72.png',
+      icon: NOTIFICATION_ICON,
+      badge: NOTIFICATION_BADGE,
       data: {
         url: `${siteUrl}/chat?msg=${encodeURIComponent(message)}`
       }
@@ -390,15 +385,6 @@ export default {
     const kv = env.subs; // KV binding
     const aiApiKey = env.AI_API_KEY; // AI API key
     const siteUrl = env.SITE_URL || 'https://github.com/Nazarali23/pigeon'; // Site URL
-
-    // Debug: AI API key kontrolü
-    if (!aiApiKey) {
-      console.warn('⚠️ AI_API_KEY not found in environment variables');
-      console.warn('For local development, create .dev.vars file with: AI_API_KEY=your-key-here');
-      console.warn('For production, set with: wrangler secret put AI_API_KEY');
-    } else {
-      console.log('✅ AI_API_KEY found (length:', aiApiKey.length, ')');
-    }
     // VAPID keys - Sadece environment variables'dan al (hardcoded fallback yok)
     const vapidPrivateKey = env.VAPID_PRIVATE_KEY;
     const vapidPublicKey = env.VAPID_PUBLIC_KEY;
@@ -544,12 +530,11 @@ export default {
         }
 
         if (!aiApiKey) {
-          console.warn('⚠️ AI_API_KEY not configured, returning fallback message');
           // Fallback response if AI API key not configured
           return new Response(
             JSON.stringify({
               success: true,
-              response: "Mesajınızı aldım! 🕊️ AI entegrasyonu yakında aktif olacak. Şu an size nasıl yardımcı olabilirim?"
+              response: "I received your message! 🕊️ AI integration will be active soon. How can I help you right now?"
             }),
             {
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
@@ -560,10 +545,6 @@ export default {
         // Gemini API'ye mesaj gönder
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(aiApiKey)}`;
 
-        console.log('📤 Sending request to Gemini API...');
-        console.log('📤 Gemini URL (without key):', geminiUrl.replace(aiApiKey, '***'));
-        console.log('📤 Message:', message.substring(0, 50) + '...');
-
         const response = await fetch(geminiUrl, {
           method: 'POST',
           headers: {
@@ -572,7 +553,7 @@ export default {
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `Sen sevgi dolu, samimi ve arkadaş canlısı bir AI asistanısın. Türkçe konuşuyorsun ve kullanıcıya sıcak, kişisel mesajlar gönderiyorsun. Kısa ve öz cevaplar ver.\n\nKullanıcı: ${message}\n\nSen:`
+                text: `You are a loving, caring, and friendly AI assistant. You speak English and send warm, personal messages to the user. Keep responses short and sweet. Include emojis when appropriate.\n\nUser: ${message}\n\nYou:`
               }]
             }],
             generationConfig: {
@@ -584,20 +565,15 @@ export default {
           })
         });
 
-        console.log('📥 Gemini API response status:', response.status, response.statusText);
-
         if (!response.ok) {
           const errorText = await response.text();
-          console.error('❌ Gemini API error:', response.status, errorText);
           throw new Error(`Gemini API error: ${response.status} - ${errorText}`);
         }
 
         const data = await response.json();
-        console.log('📥 Gemini API response received, candidates:', data.candidates?.length || 0);
 
         // Gemini API response formatı
         const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
-        console.log('📥 AI Response extracted (length:', aiResponse.length, '):', aiResponse.substring(0, 100) + '...');
 
         return new Response(
           JSON.stringify({
@@ -614,7 +590,7 @@ export default {
           JSON.stringify({
             success: false,
             error: error.message,
-            response: "Üzgünüm, şu anda cevap veremiyorum. Lütfen daha sonra tekrar deneyin."
+            response: "Sorry, I can't respond right now. Please try again later."
           }),
           {
             status: 500,
@@ -630,20 +606,25 @@ export default {
         const { theme } = await request.json();
 
         if (!aiApiKey) {
+          // Random theme if not provided
+          const themes = Object.keys(THEME_MESSAGES);
+          const randomTheme = theme || themes[Math.floor(Math.random() * themes.length)];
+          const messages = THEME_MESSAGES[randomTheme] || THEME_MESSAGES.morning;
           return new Response(
             JSON.stringify({
-              success: false,
-              error: 'AI API key not configured',
-              message: THEME_MESSAGES[theme || 'morning'][0]
+              success: true,
+              message: messages[Math.floor(Math.random() * messages.length)]
             }),
             {
-              status: 500,
               headers: { ...corsHeaders, 'Content-Type': 'application/json' }
             }
           );
         }
 
-        const result = await generateAIMessage(theme || 'morning', aiApiKey);
+        // Random theme if not provided
+        const themes = Object.keys(TIME_RANGES);
+        const selectedTheme = theme || themes[Math.floor(Math.random() * themes.length)];
+        const result = await generateAIMessage(selectedTheme, aiApiKey);
 
         return new Response(
           JSON.stringify(result),
@@ -697,8 +678,9 @@ export default {
     const hour = now.getUTCHours();
     const minute = now.getUTCMinutes();
 
-    // Eğer sabah 09:00 ise (UTC), günün zamanını planla
-    if (hour === 9 && minute === 0) {
+    // If it's 8:30 AM (UTC 5:30), recreate daily notification schedule
+    // User wants: 8:30 AM Turkey time = UTC 5:30
+    if (hour === 5 && minute === 30) {
       await scheduleDailyNotification(kv);
       return;
     }
