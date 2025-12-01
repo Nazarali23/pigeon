@@ -4,10 +4,11 @@
   <meta charset="UTF-8">
   <title>Redirecting...</title>
   <script>
-    const basePath = './index.html';
-    if (!window.location.pathname.endsWith('index.html')) {
-      window.location.replace(basePath + window.location.search + window.location.hash);
-    }
+  // 'pigeon' alt dizini için
+  const basePath = '/pigeon/index.html';
+  if (!window.location.pathname.endsWith('index.html')) {
+    window.location.replace(basePath + window.location.search + window.location.hash);
+  }
   </script>
 </head>
 <body>
