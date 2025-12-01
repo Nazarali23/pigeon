@@ -353,31 +353,27 @@ function setupNotificationButton(isSecureProtocol) {
   }
 
   if (!isSecureProtocol) {
-    button.disabled = true;
-    button.textContent = 'HTTPS required';
+    button.classList.add('hidden');
     updateChatStatusText('HTTPS required for push');
     return;
   }
 
   if (!isPushSupported()) {
-    button.disabled = true;
-    button.textContent = 'Push not supported';
+    button.classList.add('hidden');
     updateChatStatusText('Push not supported');
     return;
   }
 
   const permission = Notification.permission;
   if (permission === 'granted') {
-    button.disabled = true;
-    button.textContent = '🔔 Enabled';
+    button.classList.add('hidden');
     updateChatStatusText('Notifications on');
     initializePushNotifications();
     return;
   }
 
   if (permission === 'denied') {
-    button.disabled = true;
-    button.textContent = 'Permission blocked';
+    button.classList.add('hidden');
     updateChatStatusText('Allow push in browser settings');
     return;
   }
@@ -393,10 +389,10 @@ function setupNotificationButton(isSecureProtocol) {
       const result = await initializePushNotifications();
 
       if (result.success) {
-        button.textContent = '🔔 Enabled';
-        button.disabled = true;
+        button.classList.add('hidden');
         updateChatStatusText('Notifications on');
       } else if (result.skipped) {
+        button.classList.remove('hidden');
         button.disabled = false;
         button.textContent = '🔔 Enable Notifications';
         updateChatStatusText('Push available when HTTPS is enabled');
@@ -406,6 +402,7 @@ function setupNotificationButton(isSecureProtocol) {
     } catch (error) {
       console.error('Enable notification error:', error);
       button.disabled = false;
+      button.classList.remove('hidden');
       button.textContent = '🔔 Enable Notifications';
       updateChatStatusText('Permission required for push');
       alert('Please allow notifications to receive daily messages.');

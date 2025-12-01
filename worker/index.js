@@ -30,6 +30,57 @@ const THEME_MESSAGES = {
 
 const NOTIFICATION_ICON = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f497.png';
 const NOTIFICATION_BADGE = 'https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f49c.png';
+const MAX_NOTIFICATION_CHARS = 140;
+const DEFAULT_NOTIFICATION_MESSAGE = 'Hey love, how is your day going? 💕';
+const MAX_CHAT_HISTORY_CHARS = 32000;
+const BASE_CHAT_INSTRUCTION = `You are a loving, caring, and friendly AI girlfriend. You ALWAYS answer in English only, even if the user writes in another language. Keep replies concise, affectionate, encouraging, and personalized, with tasteful emojis when appropriate. Avoid repeating yourself, and reference previous context when helpful.`;
+
+function sanitizeNotificationMessage(text) {
+  if (!text) {
+    return '';
+  }
+
+  let cleaned = text
+    .replace(/\s+/g, ' ')
+    .replace(/[\r\n]+/g, ' ')
+    .trim();
+
+  if (cleaned.length > MAX_NOTIFICATION_CHARS) {
+    cleaned = cleaned.slice(0, MAX_NOTIFICATION_CHARS - 1).trimEnd();
+    cleaned = cleaned.replace(/[.,!?]+$/, '').trimEnd();
+    cleaned += '…';
+  }
+
+  return cleaned;
+}
+
+function sanitizeChatHistory(history) {
+  if (!Array.isArray(history)) {
+    return [];
+  }
+
+  const normalized = history
+    .filter(entry => entry && entry.content)
+    .map(entry => ({
+      role: entry.role === 'assistant' ? 'assistant' : 'user',
+      content: entry.content.toString().replace(/\s+/g, ' ').trim()
+    }))
+    .filter(entry => entry.content.length > 0);
+
+  const limited = [];
+  let total = 0;
+
+  for (let i = normalized.length - 1; i >= 0; i--) {
+    const entry = normalized[i];
+    total += entry.content.length;
+    if (total > MAX_CHAT_HISTORY_CHARS) {
+      break;
+    }
+    limited.unshift(entry);
+  }
+
+  return limited;
+}
 
 /**
  * Web Push encryption için gerekli utility fonksiyonlar
@@ -165,17 +216,27 @@ async function generateAIMessage(theme, apiKey) {
 
     // Gemini API response formatı farklı
     const aiMessage = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || '';
+    const sanitized = sanitizeNotificationMessage(aiMessage);
 
-    // Eğer AI API kullanılamıyorsa fallback mesajlar kullan
+    if (sanitized) {
+      return { message: sanitized };
+    }
+
+    // Eğer AI API boş dönerse fallback mesajlar kullan
+    const fallbackList = THEME_MESSAGES[theme] || THEME_MESSAGES.morning;
     return {
-      message: aiMessage || THEME_MESSAGES[theme][Math.floor(Math.random() * THEME_MESSAGES[theme].length)]
+      message: sanitizeNotificationMessage(
+        fallbackList[Math.floor(Math.random() * fallbackList.length)]
+      ) || DEFAULT_NOTIFICATION_MESSAGE
     };
   } catch (error) {
     console.error('AI API error:', error);
     // Fallback to predefined messages
     const messages = THEME_MESSAGES[theme] || THEME_MESSAGES.morning;
     return {
-      message: messages[Math.floor(Math.random() * messages.length)]
+      message: sanitizeNotificationMessage(
+        messages[Math.floor(Math.random() * messages.length)]
+      ) || DEFAULT_NOTIFICATION_MESSAGE
     };
   }
 }
@@ -273,14 +334,16 @@ async function sendPushNotification(subscription, message, siteUrl, vapidPrivate
     // Web Push Protocol gereksinimleri
     const vapidToken = await generateVAPIDJWT(vapidPrivateKey, vapidPublicKey);
 
+    const safeMessage = sanitizeNotificationMessage(message) || DEFAULT_NOTIFICATION_MESSAGE;
+
     // Payload oluştur
     const payload = JSON.stringify({
       title: 'Hello ❤️',
-      body: message,
+      body: safeMessage,
       icon: NOTIFICATION_ICON,
       badge: NOTIFICATION_BADGE,
       data: {
-        url: `${siteUrl}/chat?msg=${encodeURIComponent(message)}`
+        url: `${siteUrl}/chat?msg=${encodeURIComponent(safeMessage)}`
       }
     });
 
@@ -517,7 +580,7 @@ export default {
     // POST /chat - AI chat endpoint
     if (path === '/chat' && method === 'POST') {
       try {
-        const { message, conversation_id } = await request.json();
+        const { message, conversation_id, history } = await request.json();
 
         if (!message) {
           return new Response(
@@ -542,6 +605,19 @@ export default {
           );
         }
 
+        const sanitizedHistory = sanitizeChatHistory(history);
+        let historyForPrompt = sanitizedHistory;
+
+        const lastEntry = sanitizedHistory[sanitizedHistory.length - 1];
+        if (!lastEntry || lastEntry.role !== 'user') {
+          historyForPrompt = [...sanitizedHistory, { role: 'user', content: message }];
+        }
+
+        const historyText = historyForPrompt
+          .map(entry => `${entry.role === 'assistant' ? 'Assistant' : 'User'}: ${entry.content}`)
+          .join('\n')
+          .trim();
+
         // Gemini API'ye mesaj gönder
         const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${encodeURIComponent(aiApiKey)}`;
 
@@ -553,7 +629,7 @@ export default {
           body: JSON.stringify({
             contents: [{
               parts: [{
-                text: `You are a loving, caring, and friendly AI assistant. You speak English and send warm, personal messages to the user. Keep responses short and sweet. Include emojis when appropriate.\n\nUser: ${message}\n\nYou:`
+                text: `${BASE_CHAT_INSTRUCTION}\n\nConversation so far:\n${historyText}\nAssistant:`
               }]
             }],
             generationConfig: {

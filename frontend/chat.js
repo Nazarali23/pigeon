@@ -54,6 +54,51 @@ function getWorkerUrl() {
 const currentWorkerUrl = getWorkerUrl();
 console.log('🔧 Final WORKER_URL:', currentWorkerUrl || '(empty - chat will not work)');
 
+const MAX_HISTORY_CHARS = 30000;
+let conversationHistory = [];
+
+const GREETING_MESSAGES = {
+    morning: 'Good morning ☀️',
+    afternoon: 'Hope your day goes wonderfully 💐',
+    evening: 'Good evening ✨',
+    night: 'Good night 🌙'
+};
+
+function getGreetingForCurrentTime() {
+    const hour = new Date().getHours();
+    if (hour >= 6 && hour < 12) return GREETING_MESSAGES.morning;
+    if (hour >= 12 && hour < 18) return GREETING_MESSAGES.afternoon;
+    if (hour >= 18 && hour < 22) return GREETING_MESSAGES.evening;
+    return GREETING_MESSAGES.night;
+}
+
+function getHistoryCharLength(extraText = '') {
+    const historyChars = conversationHistory.reduce((total, entry) => total + (entry.content?.length || 0), 0);
+    return historyChars + (extraText?.length || 0);
+}
+
+function ensureHistoryLimit(nextMessage) {
+    if (getHistoryCharLength(nextMessage) > MAX_HISTORY_CHARS) {
+        alert('Chat history is full. Please refresh the page to continue.');
+        window.location.reload();
+        return false;
+    }
+    return true;
+}
+
+function handleKeyboardOpen() {
+    document.body.classList.add('keyboard-open');
+    setTimeout(() => {
+        scrollToBottom();
+    }, 50);
+}
+
+function handleKeyboardClose() {
+    setTimeout(() => {
+        document.body.classList.remove('keyboard-open');
+    }, 150);
+}
+
 /**
  * Send chat message
  * Global scope'a ekle (HTML onclick için) - ERKEN TANIMLA
@@ -78,6 +123,10 @@ window.sendMessage = async function sendMessage() {
     }
 
     console.log('Sending message:', message);
+
+    if (!ensureHistoryLimit(message)) {
+        return;
+    }
 
     // Disable input and button
     chatInput.disabled = true;
@@ -135,7 +184,8 @@ window.sendMessage = async function sendMessage() {
             },
             body: JSON.stringify({
                 message: message,
-                conversation_id: getConversationId()
+                conversation_id: getConversationId(),
+                history: conversationHistory
             })
         });
 
@@ -318,6 +368,18 @@ function initChat() {
             });
         }
 
+        chatInput.addEventListener('focus', handleKeyboardOpen);
+        chatInput.addEventListener('blur', handleKeyboardClose);
+
+        // Track initial bot message for history
+        const initialBotMessage = chatMessages?.querySelector('.message.bot-message p');
+        if (initialBotMessage && conversationHistory.length === 0) {
+            conversationHistory.push({
+                role: 'assistant',
+                content: initialBotMessage.textContent.trim()
+            });
+        }
+
         // Focus input on load
         chatInput.focus();
 
@@ -341,7 +403,7 @@ function checkNotificationMessage() {
     if (message) {
         // Decode and display notification message
         const decodedMessage = decodeURIComponent(message);
-        displayNotificationMessage(decodedMessage);
+        displayNotificationMessage();
 
         // Also add to chat as bot message
         addBotMessage(decodedMessage);
@@ -357,10 +419,10 @@ function checkNotificationMessage() {
 /**
  * Display notification message in the sky
  */
-function displayNotificationMessage(message) {
+function displayNotificationMessage() {
     const notificationText = document.getElementById('notificationText');
     if (notificationText) {
-        notificationText.textContent = message;
+        notificationText.textContent = getGreetingForCurrentTime();
     }
 
     // Show notification with animation
@@ -383,8 +445,7 @@ async function loadTodaysNotification() {
         // Try to get today's message from Worker
         // This would require an endpoint to get today's scheduled message
         // For now, use a default message
-        const defaultMessage = "Today will be a beautiful day! 🌟";
-        displayNotificationMessage(defaultMessage);
+        displayNotificationMessage();
     } catch (error) {
         console.error('Error loading notification:', error);
     }
@@ -420,7 +481,7 @@ async function createRandomMessage() {
             const message = data.message || "Hello! How are you today? 💕";
 
             // Display in notification area
-            displayNotificationMessage(message);
+            displayNotificationMessage();
 
             // Add to chat
             addBotMessage(message);
@@ -461,6 +522,11 @@ function addUserMessage(message) {
 
     chatMessages.appendChild(messageDiv);
     scrollToBottom();
+
+    conversationHistory.push({
+        role: 'user',
+        content: message
+    });
 }
 
 /**
@@ -524,6 +590,11 @@ function addBotMessage(message) {
 
     scrollToBottom();
     console.log('✅ addBotMessage: Scrolled to bottom, scrollTop:', chatMessages.scrollTop, 'scrollHeight:', chatMessages.scrollHeight);
+
+    conversationHistory.push({
+        role: 'assistant',
+        content: message
+    });
 }
 
 /**
@@ -695,9 +766,18 @@ if ('serviceWorker' in navigator) {
         if (event.data && event.data.type === 'NOTIFICATION_CLICKED') {
             const message = event.data.message;
             if (message) {
-                displayNotificationMessage(message);
+                displayNotificationMessage();
                 addBotMessage(message);
             }
+        }
+    });
+}
+
+if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', () => {
+        document.body.style.setProperty('--viewport-height', `${window.visualViewport.height}px`);
+        if (document.body.classList.contains('keyboard-open')) {
+            scrollToBottom();
         }
     });
 }
