@@ -2,7 +2,8 @@
   "name": "Pigeon - Push Notification App",
   "short_name": "Pigeon",
   "description": "Kişisel push bildirim sistemi",
-  "start_url": "/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
   "background_color": "#ffffff",
   "theme_color": "#ff6b6b",
@@ -76,3 +77,4 @@
   "related_applications": [],
   "prefer_related_applications": false
 }
+
