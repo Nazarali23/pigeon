@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Pigeon - Personal Push Notification System">
+    <title>Pigeon 🕊️</title>
+    <link rel="manifest" href="frontend/manifest.json">
+    <link rel="stylesheet" href="frontend/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.152.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script type="module" src="frontend/pigeon3d.js"></script>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.0.1/model-viewer.min.js"></script>
+</head>
+
+<body>
+    <!-- Sky with clouds -->
+    <div class="sky">
+        <div class="cloud cloud1"></div>
+        <div class="cloud cloud2"></div>
+        <div class="cloud cloud3"></div>
+
+        <!-- Today's notification message in the sky -->
+        <div class="notification-message" id="notificationMessage">
+            <div class="notification-content">
+                <span class="notification-icon">💌</span>
+                <span class="notification-text" id="notificationText">Today will be a beautiful day!</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- 3D Animated Pigeon in the center (GLTF model will be loaded here) -->
+    <div class="pigeon-container" id="pigeon3DContainer">
+        <model-viewer src="frontend/pigeon.glb" alt="Animated Pigeon" auto-rotate camera-controls autoplay
+            background-color="#ffffff" class="pigeon-model">
+        </model-viewer>
+    </div>
+
+    <!-- Chat space at the bottom -->
+    <div class="chat-container">
+        <div class="chat-header">
+            <h2>💬 Chat with Pigeon</h2>
+            <div class="chat-header-buttons">
+                <button id="createMessageButton" class="create-message-button" title="Create a random message">
+                    ✨ Create Message
+                </button>
+                <button id="enableNotificationsButton" class="notify-button" title="Enable push notifications">
+                    🔔 Enable Notifications
+                </button>
+                <div class="chat-status" id="chatStatus">
+                    <span class="status-dot"></span>
+                    <span id="chatStatusText">Online</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message bot-message">
+                <div class="message-avatar">🕊️</div>
+                <div class="message-content">
+                    <p>Hello! How are you today? How can I help you?</p>
+                    <span class="message-time" id="botMessageTime"></span>
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-input-container">
+            <input type="text" id="chatInput" class="chat-input" placeholder="Type your message..." autocomplete="off">
+            <button id="sendButton" class="send-button" type="button">
+                <span>✈️</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- Loading overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-spinner"></div>
+        <p>Pigeon is preparing...</p>
+    </div>
+
+    <!-- Protocol warning (for file://) -->
+    <div class="protocol-warning" id="protocolWarning" style="display: none;">
+        <div class="warning-content">
+            <h3>⚠️ Local Server Required</h3>
+            <p>Service Workers only work over HTTP/HTTPS. Please use a local server:</p>
+            <div class="warning-commands">
+                <code>python -m http.server 8000</code>
+                <br>
+                <small>Then open in your browser: <strong>http://localhost:8000</strong></small>
+            </div>
+            <button onclick="document.getElementById('protocolWarning').style.display='none'">OK, Got it</button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <!-- ÖNEMLİ: main.js önce yüklenmeli çünkü chat.js window.WORKER_URL'i kullanıyor -->
+    <script src="frontend/main.js"></script>
+    <script src="frontend/chat.js"></script>
+    <script src="frontend/pigeon3d.js"></script>
+    <script src="frontend/grass3d.js"></script>
+    <!-- Fallback: Eğer chat.js yüklenmezse loading overlay'i kapat -->
+    <script>
+        // Güvenlik: Her durumda loading overlay'i kapat
+        setTimeout(function () {
+            const overlay = document.getElementById('loadingOverlay');
+            if (overlay) {
+                overlay.classList.add('hidden');
+                setTimeout(function () {
+                    overlay.style.display = 'none';
+                }, 500);
+            }
+        }, 2000); // 2 saniye sonra zorla kapat
+    </script>
+</body>
+
+</html>

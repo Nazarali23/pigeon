@@ -1,0 +1,846 @@
+/* ============================================
+   GLOBAL STYLES
+   ============================================ */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --sky-blue-start: #87CEEB;
+    --sky-blue-end: #E0F6FF;
+    --grass-green: #7CB342;
+    --grass-dark: #558B2F;
+    --cloud-white: #FFFFFF;
+    --pigeon-gray: #9E9E9E;
+    --pigeon-light: #E0E0E0;
+    --chat-bg: rgba(255, 255, 255, 0.95);
+    --chat-border: #E0E0E0;
+    --message-user: #2196F3;
+    --message-bot: #F5F5F5;
+    --text-primary: #333;
+    --text-secondary: #666;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    min-height: 100vh;
+    width: 100%;
+    overflow-x: hidden;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    position: relative;
+    background: linear-gradient(to bottom, var(--sky-blue-start) 0%, var(--sky-blue-end) 70%, var(--grass-green) 70%);
+    padding-bottom: 200px;
+}
+
+body.keyboard-open {
+    padding-bottom: 80px;
+}
+
+body.keyboard-open .chat-container {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0 auto;
+    max-height: 80vh;
+}
+
+body.keyboard-open .chat-messages {
+    max-height: none;
+    min-height: 40vh;
+}
+
+/* ============================================
+   SKY WITH CLOUDS
+   ============================================ */
+.sky {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 70%;
+    background: linear-gradient(to bottom,
+            var(--sky-blue-start) 0%,
+            var(--sky-blue-end) 100%);
+    overflow: hidden;
+    z-index: 1;
+}
+
+/* Cloud animations */
+.cloud {
+    position: absolute;
+    background: var(--cloud-white);
+    border-radius: 50px;
+    opacity: 0.8;
+    animation: float 20s infinite ease-in-out;
+}
+
+.cloud:before,
+.cloud:after {
+    content: '';
+    position: absolute;
+    background: var(--cloud-white);
+    border-radius: 50px;
+}
+
+.cloud1 {
+    width: 80px;
+    height: 80px;
+    top: 10%;
+    left: 10%;
+    animation-duration: 25s;
+}
+
+.cloud1:before {
+    width: 50px;
+    height: 50px;
+    top: -25px;
+    left: 10px;
+}
+
+.cloud1:after {
+    width: 60px;
+    height: 60px;
+    top: -15px;
+    right: 10px;
+}
+
+.cloud2 {
+    width: 100px;
+    height: 100px;
+    top: 15%;
+    right: 15%;
+    animation-duration: 30s;
+    animation-delay: -5s;
+}
+
+.cloud2:before {
+    width: 60px;
+    height: 60px;
+    top: -30px;
+    left: 15px;
+}
+
+.cloud2:after {
+    width: 70px;
+    height: 70px;
+    top: -20px;
+    right: 15px;
+}
+
+.cloud3 {
+    width: 70px;
+    height: 70px;
+    top: 25%;
+    left: 60%;
+    animation-duration: 35s;
+    animation-delay: -10s;
+}
+
+.cloud3:before {
+    width: 45px;
+    height: 45px;
+    top: -20px;
+    left: 10px;
+}
+
+.cloud3:after {
+    width: 55px;
+    height: 55px;
+    top: -15px;
+    right: 10px;
+}
+
+@keyframes float {
+
+    0%,
+    100% {
+        transform: translateX(0) translateY(0);
+    }
+
+    25% {
+        transform: translateX(20px) translateY(-10px);
+    }
+
+    50% {
+        transform: translateX(-15px) translateY(5px);
+    }
+
+    75% {
+        transform: translateX(10px) translateY(-5px);
+    }
+}
+
+/* ============================================
+   NOTIFICATION MESSAGE IN SKY
+   ============================================ */
+.notification-message {
+    position: absolute;
+    top: 5%;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    opacity: 0;
+    animation: fadeInDown 1s ease-out 0.5s forwards;
+}
+
+.notification-content {
+    background: rgba(255, 255, 255, 0.95);
+    padding: 15px 25px;
+    border-radius: 50px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    animation: floatMessage 3s ease-in-out infinite;
+}
+
+.notification-icon {
+    font-size: 24px;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.notification-text {
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--text-primary);
+    white-space: nowrap;
+}
+
+@keyframes fadeInDown {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(-20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+@keyframes floatMessage {
+
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.1);
+    }
+}
+
+/* ============================================
+   3D ANIMATED PIGEON (GLTF Model)
+   ============================================ */
+.pigeon-container {
+    padding-top: 50px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+    width: min(420px, 60vw);
+    height: min(420px, 60vw);
+}
+
+.pigeon-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+.pigeon-model {
+    width: 500px;
+    height: 300px;
+    margin: auto;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 5;
+}
+
+/* CSS Pigeon styles removed - Now using GLTF model loaded via Three.js */
+
+/* ============================================
+   GRASS (2D CSS - kept for fallback)
+   ============================================ */
+.grass-container {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 30%;
+    background: linear-gradient(to bottom,
+            var(--grass-green) 0%,
+            var(--grass-dark) 100%);
+    z-index: 2;
+    overflow: hidden;
+}
+
+/* ============================================
+   3D GRASS ABOVE CHAT
+   ============================================ */
+.grass-3d-container {
+    position: relative;
+    width: 100%;
+    height: 140px;
+    margin: -120px auto 0;
+    z-index: 50;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.grass-3d-container canvas {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+
+@keyframes grassSway {
+
+    0%,
+    100% {
+        transform: rotate(0deg);
+    }
+
+    50% {
+        transform: rotate(5deg);
+    }
+}
+
+/* ============================================
+   CHAT CONTAINER
+   ============================================ */
+.chat-container {
+    position: relative;
+    width: 100%;
+    max-width: 960px;
+    margin: 0 auto;
+    background: var(--chat-bg);
+    backdrop-filter: blur(10px);
+    border-top: 2px solid var(--chat-border);
+    box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.1);
+    z-index: 100;
+    display: flex;
+    flex-direction: column;
+    animation: slideUp 0.5s ease-out;
+    border-radius: 24px 24px 0 0;
+}
+
+@keyframes slideUp {
+    from {
+        transform: translateY(100%);
+    }
+
+    to {
+        transform: translateY(0);
+    }
+}
+
+.chat-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--chat-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.8);
+}
+
+.chat-header-buttons {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+}
+
+.create-message-button {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #FF6B9D, #C44569);
+    color: white;
+    border: none;
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(255, 107, 157, 0.3);
+    white-space: nowrap;
+    min-width: 130px;
+}
+
+.create-message-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(255, 107, 157, 0.4);
+}
+
+.create-message-button:active {
+    transform: scale(0.95);
+}
+
+.create-message-button:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.notify-button {
+    padding: 6px 12px;
+    background: linear-gradient(135deg, #56ab2f, #a8e063);
+    color: white;
+    border: none;
+    border-radius: 18px;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 2px 8px rgba(86, 171, 47, 0.3);
+    white-space: nowrap;
+    min-width: 150px;
+}
+
+.notify-button.hidden {
+    display: none;
+}
+
+.notify-button:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(86, 171, 47, 0.4);
+}
+
+.notify-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.chat-header h2 {
+    font-size: 20px;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+.chat-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: #4CAF50;
+    border-radius: 50%;
+    animation: pulse 2s ease-in-out infinite;
+}
+
+.chat-messages {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    min-height: 240px;
+    max-height: min(420px, 45vh);
+}
+
+.message {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    animation: messageSlideIn 0.3s ease-out;
+}
+
+@keyframes messageSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.bot-message .message-avatar {
+    background: linear-gradient(135deg, #E0E0E0, #BDBDBD);
+}
+
+.user-message {
+    flex-direction: row-reverse;
+}
+
+.user-message .message-avatar {
+    background: linear-gradient(135deg, var(--message-user), #1976D2);
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 12px 16px;
+    border-radius: 18px;
+    position: relative;
+}
+
+.bot-message .message-content {
+    background: var(--message-bot);
+    color: var(--text-primary);
+}
+
+.user-message .message-content {
+    background: var(--message-user);
+    color: white;
+}
+
+.message-content p {
+    margin: 0;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.message-time {
+    font-size: 11px;
+    opacity: 0.7;
+    display: block;
+    margin-top: 5px;
+}
+
+.chat-input-container {
+    display: flex;
+    gap: 10px;
+    padding: 15px 20px;
+    border-top: 1px solid var(--chat-border);
+    background: rgba(255, 255, 255, 0.9);
+}
+
+.chat-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 2px solid var(--chat-border);
+    border-radius: 25px;
+    font-size: 16px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.chat-input:focus {
+    border-color: var(--message-user);
+}
+
+.send-button {
+    width: 50px;
+    height: 50px;
+    border: none;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--message-user), #1976D2);
+    color: white;
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+    box-shadow: 0 4px 12px rgba(33, 150, 243, 0.3);
+}
+
+.send-button:hover {
+    transform: scale(1.1);
+    box-shadow: 0 6px 20px rgba(33, 150, 243, 0.4);
+}
+
+.send-button:active {
+    transform: scale(0.95);
+}
+
+.send-button:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* ============================================
+   LOADING OVERLAY
+   ============================================ */
+.loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(255, 255, 255, 0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    transition: opacity 0.5s;
+}
+
+.loading-overlay.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading-spinner {
+    width: 50px;
+    height: 50px;
+    border: 4px solid #E0E0E0;
+    border-top-color: var(--message-user);
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.loading-overlay p {
+    margin-top: 20px;
+    color: var(--text-secondary);
+    font-size: 16px;
+}
+
+/* ============================================
+   PROTOCOL WARNING
+   ============================================ */
+.protocol-warning {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+    backdrop-filter: blur(5px);
+}
+
+.warning-content {
+    background: white;
+    padding: 30px;
+    border-radius: 15px;
+    max-width: 500px;
+    text-align: center;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+}
+
+.warning-content h3 {
+    color: #ff6b6b;
+    margin-bottom: 15px;
+    font-size: 24px;
+}
+
+.warning-content p {
+    color: var(--text-primary);
+    margin-bottom: 20px;
+    line-height: 1.6;
+}
+
+.warning-commands {
+    background: #f5f5f5;
+    padding: 15px;
+    border-radius: 8px;
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+}
+
+.warning-commands code {
+    color: #2196F3;
+    font-size: 14px;
+}
+
+.warning-commands small {
+    display: block;
+    margin-top: 10px;
+    color: var(--text-secondary);
+}
+
+.warning-content button {
+    margin-top: 20px;
+    padding: 12px 30px;
+    background: linear-gradient(135deg, var(--message-user), #1976D2);
+    color: white;
+    border: none;
+    border-radius: 25px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: transform 0.2s;
+}
+
+.warning-content button:hover {
+    transform: scale(1.05);
+}
+
+/* ============================================
+   RESPONSIVE DESIGN
+   ============================================ */
+@media (max-width: 768px) {
+    body {
+        padding-bottom: 120px;
+    }
+
+    .pigeon-container {
+        position: relative;
+        top: auto;
+        left: auto;
+        transform: none;
+        margin: auto;
+        width: 100%;
+        padding: auto;
+    }
+
+    .notification-content {
+        padding: 12px 20px;
+        font-size: 14px;
+    }
+
+    .notification-text {
+        font-size: 16px;
+    }
+
+    .grass-3d-container {
+        margin-top: -60px;
+        height: 110px;
+    }
+
+    .chat-container {
+        max-height: none;
+        min-height: 60vh;
+        border-radius: 24px 24px 0 0;
+    }
+
+    .chat-messages {
+        max-height: none;
+        min-height: 40vh;
+    }
+
+    .message-content {
+        max-width: 90%;
+    }
+
+    .chat-header-buttons {
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+
+    .create-message-button,
+    .notify-button {
+        width: 100%;
+        text-align: center;
+    }
+}
+
+@media (min-width: 1024px) {
+    .chat-container {
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        transform: translateX(-50%);
+        max-height: 45%;
+        border-radius: 32px 32px 0 0;
+    }
+
+    .grass-3d-container {
+        height: 160px;
+        margin-top: -180px;
+    }
+}
+
+/* Scrollbar styling */
+.chat-messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+    background: rgba(0, 0, 0, 0.3);
+}
+
+/* Typing indicator */
+.typing-indicator .message-content {
+    padding: 12px 20px;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--text-secondary);
+    border-radius: 50%;
+    animation: typingDot 1.4s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) {
+    animation-delay: 0s;
+}
+
+.typing-dots span:nth-child(2) {
+    animation-delay: 0.2s;
+}
+
+.typing-dots span:nth-child(3) {
+    animation-delay: 0.4s;
+}
+
+@keyframes typingDot {
+
+    0%,
+    60%,
+    100% {
+        transform: translateY(0);
+        opacity: 0.7;
+    }
+
+    30% {
+        transform: translateY(-10px);
+        opacity: 1;
+    }
+}
