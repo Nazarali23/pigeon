@@ -5,6 +5,9 @@ name = "pigeon-worker"
 main = "worker/index.js"
 compatibility_date = "2024-01-01"
 
+# Pages build output directory
+pages_build_output_dir = "./"
+
 # Workers.dev deployment (workers.dev subdomain'inde deploy edilir)
 workers_dev = true
 
@@ -38,3 +41,4 @@ crons = ["30 5 * * *", "* * * * *"]
 # [env.production.kv_namespaces]
 # binding = "subs"
 # id = "production-kv-namespace-id"
+
