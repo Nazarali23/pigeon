@@ -89,11 +89,15 @@ function ensureHistoryLimit(nextMessage) {
 let keyboardIsOpen = false;
 
 function handleKeyboardOpen() {
-    if (keyboardIsOpen) return; // zaten açık, tekrar etme
+    if (keyboardIsOpen) return;
     keyboardIsOpen = true;
     document.body.classList.add('keyboard-open');
-
+    // Scroll input into view (especially for mobile)
     setTimeout(() => {
+        const chatInput = document.getElementById('chatInput');
+        if (chatInput) {
+            chatInput.scrollIntoView({ block: 'end', behavior: 'smooth' });
+        }
         scrollToBottom();
     }, 50);
 }
@@ -388,51 +392,31 @@ function initChat() {
         // Remove any existing onclick attribute (HTML'den gelen)
         sendButton.removeAttribute('onclick');
 
-        // Prevent send button from stealing focus on mobile so keyboard stays open.
-        // Keep the input focused on pointer/touch start (passive:false so preventDefault works).
-        const keepFocusOnInput = (e) => {
-            if (chatInput) {
-                e.preventDefault(); // avoid the button taking focus which can close the virtual keyboard
-                chatInput.focus();
-            }
-        };
-        sendButton.addEventListener('pointerdown', keepFocusOnInput, { passive: false });
-        sendButton.addEventListener('touchstart', keepFocusOnInput, { passive: false });
+        // Remove problematic focus logic on send button (fixes mobile lag)
+        // sendButton.addEventListener('pointerdown', keepFocusOnInput, { passive: false });
+        // sendButton.addEventListener('touchstart', keepFocusOnInput, { passive: false });
 
-        // Add event listener (primary method)
-        sendButton.addEventListener('click', function (e) {
+        // Add robust event listeners for send button (works on all devices)
+        const sendHandler = function (e) {
             e.preventDefault();
             e.stopPropagation();
-            console.log('✅ Send button clicked (addEventListener)!');
             if (typeof window.sendMessage === 'function') {
                 window.sendMessage();
-            } else {
-                console.error('❌ window.sendMessage is not a function!', typeof window.sendMessage);
             }
-        }, false);
-
-        // Also set onclick as fallback (for maximum compatibility)
-        sendButton.onclick = function (e) {
-            e.preventDefault();
-            e.stopPropagation();
-            console.log('✅ Send button clicked (onclick)!');
-            if (typeof window.sendMessage === 'function') {
-                window.sendMessage();
-            } else {
-                console.error('❌ window.sendMessage is not a function!', typeof window.sendMessage);
-            }
-            return false;
         };
+        sendButton.addEventListener('click', sendHandler, { passive: false });
+        sendButton.addEventListener('touchend', sendHandler, { passive: false });
+
+        sendButton.onclick = sendHandler;
 
         console.log('✅ Event listeners added. sendMessage available:', typeof window.sendMessage);
         console.log('✅ Button element:', sendButton);
 
-        // Send message on Enter key
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+        // Send message on Enter key (also on mobile)
+        chatInput.addEventListener('keydown', (e) => {
+            if ((e.key === 'Enter' || e.keyCode === 13) && !e.shiftKey) {
                 e.preventDefault();
-                console.log('Enter key pressed');
-                sendMessage();
+                window.sendMessage();
             }
         });
 
@@ -542,6 +526,52 @@ function initChat() {
             }, { passive: true });
         } else {
             console.warn('⚠️ Toggle button or chat container not found');
+        }
+
+        // Notification permission handler
+        function requestNotificationPermission() {
+            if (!('Notification' in window)) {
+                alert('This browser does not support notifications.');
+                return;
+            }
+            if (Notification.permission === 'granted') {
+                console.log('🔔 Notification permission already granted.');
+                return;
+            }
+            if (Notification.permission === 'denied') {
+                alert('You have blocked notifications. Please enable them in your browser settings.');
+                return;
+            }
+            Notification.requestPermission().then(permission => {
+                if (permission === 'granted') {
+                    alert('Notifications enabled! 🎉');
+                    // Optionally update UI
+                    const btn = document.getElementById('enableNotificationsButton');
+                    if (btn) btn.classList.add('hidden');
+                } else {
+                    alert('Notifications not enabled.');
+                }
+            });
+        }
+
+        // Attach notification button handler
+        const notifyBtn = document.getElementById('enableNotificationsButton');
+        if (notifyBtn) {
+            notifyBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                requestNotificationPermission();
+            });
+            // Hide button if already granted
+            if (Notification && Notification.permission === 'granted') {
+                notifyBtn.classList.add('hidden');
+            }
+        }
+
+        // Prompt for notification permission on load if not granted/denied
+        if (Notification && Notification.permission === 'default') {
+            setTimeout(() => {
+                requestNotificationPermission();
+            }, 1200);
         }
 
         console.log('✅ Chat initialized successfully');
@@ -942,6 +972,11 @@ if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
         document.body.style.setProperty('--viewport-height', `${window.visualViewport.height}px`);
         if (document.body.classList.contains('keyboard-open')) {
+            // Scroll input into view if keyboard is open
+            const chatInput = document.getElementById('chatInput');
+            if (chatInput) {
+                chatInput.scrollIntoView({ block: 'end', behavior: 'smooth' });
+            }
             scrollToBottom();
         }
     });
