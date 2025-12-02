@@ -92,12 +92,8 @@ function handleKeyboardOpen() {
     if (keyboardIsOpen) return;
     keyboardIsOpen = true;
     document.body.classList.add('keyboard-open');
-    // Scroll input into view (especially for mobile)
+    // Only scroll chat to bottom, do NOT call scrollIntoView on input (prevents lag)
     setTimeout(() => {
-        const chatInput = document.getElementById('chatInput');
-        if (chatInput) {
-            chatInput.scrollIntoView({ block: 'end', behavior: 'smooth' });
-        }
         scrollToBottom();
     }, 50);
 }
@@ -972,11 +968,7 @@ if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', () => {
         document.body.style.setProperty('--viewport-height', `${window.visualViewport.height}px`);
         if (document.body.classList.contains('keyboard-open')) {
-            // Scroll input into view if keyboard is open
-            const chatInput = document.getElementById('chatInput');
-            if (chatInput) {
-                chatInput.scrollIntoView({ block: 'end', behavior: 'smooth' });
-            }
+            // Only scroll chat to bottom, do NOT call scrollIntoView on input (prevents lag)
             scrollToBottom();
         }
     });
